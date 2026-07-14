@@ -1,0 +1,2093 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MOS Evaluation - CV GRPO</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7f4;
+      --panel: #ffffff;
+      --text: #202124;
+      --muted: #5f6368;
+      --line: #d7d9dd;
+      --accent: #1264a3;
+      --warn: #b3261e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(247, 247, 244, 0.96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+    }
+    .bar {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+    h2 { margin: 0 0 12px; font-size: 20px; letter-spacing: 0; }
+    h3 { margin: 0 0 10px; font-size: 16px; letter-spacing: 0; }
+    main { max-width: 1180px; margin: 0 auto; padding: 20px 18px 60px; }
+    .intro, .case {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .intro p { margin: 8px 0; }
+    .notice { color: var(--warn); font-weight: 700; }
+    .meta { color: var(--muted); font-size: 14px; }
+    .case-head {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+    .face {
+      width: 250px;
+      height: 250px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #eee;
+    }
+    .prompt {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfbfa;
+      margin-top: 10px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .sample {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    .sample-title { font-weight: 700; margin-bottom: 8px; }
+    audio { width: 100%; display: block; margin-bottom: 10px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 8px 0 4px;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid #b9bdc3;
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: #fff;
+      color: var(--text);
+    }
+    .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    button {
+      border: 1px solid #0b5790;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      min-height: 36px;
+      padding: 7px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary { background: #fff; color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .progress { font-weight: 700; white-space: nowrap; }
+    .missing { outline: 2px solid var(--warn); }
+    @media (max-width: 700px) {
+      .bar { align-items: flex-start; flex-direction: column; }
+      .case-head { grid-template-columns: 1fr; }
+      .face { width: 100%; max-width: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <h1>Evaluation of Synthetic Speech</h1>
+      <div class="actions">
+        <span class="progress" id="progress">0 / 0 scored</span>
+        <button class="secondary" type="button" id="checkBtn">Check missing</button>
+        <button type="button" id="downloadBtn">Download CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Instructions</h2>
+      <p>The purpose of this study is to evaluate synthetic speech. Please listen with headphones.</p>
+      <p class="notice">For each audio, rate both Naturalness and Similarity from 1 to 5.</p>
+      <p>Naturalness: judge how much the audio sounds like a real human voice. Similarity: judge how well the voice matches the appearance and speaking style implied by the face image and text prompt. Do not judge grammar or sentence content.</p>
+      <p>Method names are hidden during rating. Use the Download CSV button after all scores are filled.</p>
+      <h3>Listening check</h3>
+      <p>Please type what you hear in this audio before submitting scores.</p>
+      <audio controls preload="auto" src="https://YangAi520.github.io/VCTK_MOS_AS/write.wav"></audio>
+      <input type="text" id="contentCheck" name="content_check" placeholder="Type what you heard">
+    </section>
+
+    <div id="cases"></div>
+  </main>
+
+  <script>
+    const DATA = [
+  {
+    "mos_case_id": "case_01_F",
+    "case_id": "easy_0255_pIYdfEbwsqI_00_11_39_94",
+    "case_type": "easy",
+    "speechgender": "F",
+    "item_name": "pIYdfEbwsqI_00_11_39_94",
+    "face_file": "face/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.jpg",
+    "style_prompt": "With bright, unmistakable joy, the female speaker sounds young and lively, speaking at a normal pace with a high, energetic voice.",
+    "content_prompt": "and cute. So, would love to do. That is all my goals for 2025 and my little mini wrap-up of 2024.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_01_F_easy_pIYdfEbwsqI_00_11_39_94.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_02_F",
+    "case_id": "easy_0280_GdQkyQrQawM_00_06_28_07",
+    "case_type": "easy",
+    "speechgender": "F",
+    "item_name": "GdQkyQrQawM_00_06_28_07",
+    "face_file": "face/case_02_F_easy_GdQkyQrQawM_00_06_28_07.jpg",
+    "style_prompt": "A female speaker delivers the line with a youthful, high-pitched voice and lively presence, while keeping the tone clear and neutral.",
+    "content_prompt": "The fourth exercise is that you're going to start in a clothing store and finish in a bowling alley.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_02_F_easy_GdQkyQrQawM_00_06_28_07.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_03_F",
+    "case_id": "easy_0256_qUwE8TRhOk8_00_10_30_99",
+    "case_type": "easy",
+    "speechgender": "F",
+    "item_name": "qUwE8TRhOk8_00_10_30_99",
+    "face_file": "face/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.jpg",
+    "style_prompt": "A female speaker delivers the line with bright, youthful joy, sounding lively, warm, and clearly delighted throughout.",
+    "content_prompt": "And let's get on it. I am Asia Dang. Thank you so much for watching this channel. If you have.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_03_F_easy_qUwE8TRhOk8_00_10_30_99.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_04_F",
+    "case_id": "easy_0015_2--6XzUxGBI_00_22_19_92",
+    "case_type": "easy",
+    "speechgender": "F",
+    "item_name": "2--6XzUxGBI_00_22_19_92",
+    "face_file": "face/case_04_F_easy_2--6XzUxGBI_00_22_19_92.jpg",
+    "style_prompt": "With bright, youthful excitement, the female speaker sounds vividly happy and energetic, delivering the line with lively, upbeat warmth.",
+    "content_prompt": "to start writing me and Leanne and Kath are so excited to get working on those for you but yes.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_04_F_easy_2--6XzUxGBI_00_22_19_92.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_05_F",
+    "case_id": "easy_0086_53nShLQ1ewA_00_08_31_85",
+    "case_type": "easy",
+    "speechgender": "F",
+    "item_name": "53nShLQ1ewA_00_08_31_85",
+    "face_file": "face/case_05_F_easy_53nShLQ1ewA_00_08_31_85.jpg",
+    "style_prompt": "The female speaker sounds calm and neutral, speaking at a natural pace with an even, balanced voice.",
+    "content_prompt": "And every aspect of your life, we all have habits.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_05_F_easy_53nShLQ1ewA_00_08_31_85.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_06_F",
+    "case_id": "hard_0219_4qkpjw5homQ_00_00_27_37",
+    "case_type": "hard",
+    "speechgender": "F",
+    "item_name": "4qkpjw5homQ_00_00_27_37",
+    "face_file": "face/case_06_F_hard_4qkpjw5homQ_00_00_27_37.jpg",
+    "style_prompt": "A female speaker delivers the line with bright, exuberant joy and lively momentum, sounding warmly animated and unmistakably upbeat.",
+    "content_prompt": "In adults, the good news is that roundworms.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_06_F_hard_4qkpjw5homQ_00_00_27_37.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_07_F",
+    "case_id": "hard_0036_2OWduVCiOZ4_00_00_39_25",
+    "case_type": "hard",
+    "speechgender": "F",
+    "item_name": "2OWduVCiOZ4_00_00_39_25",
+    "face_file": "face/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.jpg",
+    "style_prompt": "With bright, unmistakable happiness, the female speaker delivers the line in a lively adult voice with a naturally high pitch.",
+    "content_prompt": "believe me, the time pressure was intense. I think that helped make me more mindful of.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_07_F_hard_2OWduVCiOZ4_00_00_39_25.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_08_F",
+    "case_id": "hard_0038_2qHsdAYa7qQ_00_01_58_84",
+    "case_type": "hard",
+    "speechgender": "F",
+    "item_name": "2qHsdAYa7qQ_00_01_58_84",
+    "face_file": "face/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.jpg",
+    "style_prompt": "The female speaker sounds like a happy adult, speaking with bright warmth, lively enthusiasm, and an unmistakably cheerful, expressive tone.",
+    "content_prompt": "might discover that pickled herring or sauerkraut is delicious to you you've discovered a new food.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_08_F_hard_2qHsdAYa7qQ_00_01_58_84.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_09_F",
+    "case_id": "hard_0279_AViL1gDtfpU_00_08_22_19",
+    "case_type": "hard",
+    "speechgender": "F",
+    "item_name": "AViL1gDtfpU_00_08_22_19",
+    "face_file": "face/case_09_F_hard_AViL1gDtfpU_00_08_22_19.jpg",
+    "style_prompt": "In a bright, high-pitched voice, the female speaker sounds openly joyful while speaking at a natural, steady pace.",
+    "content_prompt": "So then it was finally time to return back to work and that was incredibly hard.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_09_F_hard_AViL1gDtfpU_00_08_22_19.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_10_F",
+    "case_id": "hard_0268_9OXlZUfbsPI_00_13_12_24",
+    "case_type": "hard",
+    "speechgender": "F",
+    "item_name": "9OXlZUfbsPI_00_13_12_24",
+    "face_file": "face/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.jpg",
+    "style_prompt": "A female speaker delivers the line with a bright, high voice and clearly joyful, lively warmth at a natural pace.",
+    "content_prompt": "Don't take offense. Gird up your loins and be more assertive.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_10_F_hard_9OXlZUfbsPI_00_13_12_24.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_11_M",
+    "case_id": "easy_0218_tDOBDFfwWhI_00_02_24_00",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "tDOBDFfwWhI_00_02_24_00",
+    "face_file": "face/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.jpg",
+    "style_prompt": "The male speaker sounds like an adult with a low voice, delivering the line neutrally but with lively presence at a normal pace.",
+    "content_prompt": "within the relationship, when they've broken up with you, it can be such a demonstration.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_11_M_easy_tDOBDFfwWhI_00_02_24_00.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_12_M",
+    "case_id": "easy_0103_BfCx8suZ9uI_00_04_06_98",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "BfCx8suZ9uI_00_04_06_98",
+    "face_file": "face/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.jpg",
+    "style_prompt": "This male speaker has a low, grounded adult voice, speaking with brisk, energetic clarity while maintaining a neutral tone.",
+    "content_prompt": "And the more arbitrary decisions you make.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_12_M_easy_BfCx8suZ9uI_00_04_06_98.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_13_M",
+    "case_id": "easy_0269_5hvVjOqk_4o_00_05_45_97",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "5hvVjOqk_4o_00_05_45_97",
+    "face_file": "face/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.jpg",
+    "style_prompt": "The male speaker sounds energetic yet neutral, with a low adult voice and a steady, natural speaking pace.",
+    "content_prompt": "a lot more than just his tone it was all of those non-verbal cues all packaged into one kind of.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_13_M_easy_5hvVjOqk_4o_00_05_45_97.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_14_M",
+    "case_id": "easy_0005_Cwgxm1TUfj8_00_07_28_75",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "Cwgxm1TUfj8_00_07_28_75",
+    "face_file": "face/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.jpg",
+    "style_prompt": "This male speaker sounds warmly upbeat and distinctly joyful, speaking with lively adult confidence and an easy, infectious smile in the voice.",
+    "content_prompt": "because that's where the joy is.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_14_M_easy_Cwgxm1TUfj8_00_07_28_75.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_15_M",
+    "case_id": "easy_0193_lw_dUKXNCyw_00_05_27_47",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "lw_dUKXNCyw_00_05_27_47",
+    "face_file": "face/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.jpg",
+    "style_prompt": "This male speaker has a young, low-toned voice, speaking at a steady pace with calm, neutral energy.",
+    "content_prompt": "it's really easy to make mistakes, to miss things. Oftentimes those things are really obvious to.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_15_M_easy_lw_dUKXNCyw_00_05_27_47.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_16_M",
+    "case_id": "easy_0212_owtSR-9Cupo_00_01_01_57",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "owtSR-9Cupo_00_01_01_57",
+    "face_file": "face/case_16_M_easy_owtSR-9Cupo_00_01_01_57.jpg",
+    "style_prompt": "The male speaker sounds like an energetic adult, speaking with a steady neutral tone and natural, confident presence.",
+    "content_prompt": "Because this person thinks everyone is dumb except for them.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_16_M_easy_owtSR-9Cupo_00_01_01_57.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_17_M",
+    "case_id": "easy_0049_UCsDlaKhufk_00_08_16_17",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "UCsDlaKhufk_00_08_16_17",
+    "face_file": "face/case_17_M_easy_UCsDlaKhufk_00_08_16_17.jpg",
+    "style_prompt": "The male speaker sounds vividly happy and upbeat, speaking with lively energy while keeping a natural, normal pitch.",
+    "content_prompt": "I hope you enjoyed this video and I would love to hear from you.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_17_M_easy_UCsDlaKhufk_00_08_16_17.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_18_M",
+    "case_id": "easy_0070_yWjTFS5KgIU_00_01_51_05",
+    "case_type": "easy",
+    "speechgender": "M",
+    "item_name": "yWjTFS5KgIU_00_01_51_05",
+    "face_file": "face/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.jpg",
+    "style_prompt": "With a low, youthful voice and bright, exuberant happiness, the male speaker delivers the line at a natural pace.",
+    "content_prompt": "Oh my goodness, and uh, I got.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_18_M_easy_yWjTFS5KgIU_00_01_51_05.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_19_M",
+    "case_id": "hard_0082_H6lkLEaPT58_00_03_51_38",
+    "case_type": "hard",
+    "speechgender": "M",
+    "item_name": "H6lkLEaPT58_00_03_51_38",
+    "face_file": "face/case_19_M_hard_H6lkLEaPT58_00_03_51_38.jpg",
+    "style_prompt": "With bright, unmistakable happiness, the male speaker delivers the line in a youthful low voice that feels warm and lively.",
+    "content_prompt": "This isn't just about becoming your best self, it's about being ready to receive the best that life has to offer you, including the love that you actually deserve.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_19_M_hard_H6lkLEaPT58_00_03_51_38.wav",
+        "label": "Audio 13"
+      }
+    ]
+  },
+  {
+    "mos_case_id": "case_20_M",
+    "case_id": "hard_0196_2Ong6qegCkY_00_00_11_48",
+    "case_type": "hard",
+    "speechgender": "M",
+    "item_name": "2Ong6qegCkY_00_00_11_48",
+    "face_file": "face/case_20_M_hard_2Ong6qegCkY_00_00_11_48.jpg",
+    "style_prompt": "With an old, low voice, the male speaker speaks at a steady pace, carrying clear and heartfelt sadness.",
+    "content_prompt": "broke into the darkness of our world.",
+    "samples": [
+      {
+        "method_id": "voxinstruct",
+        "method_desc": "StyleTTS baseline: VoxInstruct",
+        "speech_file": "speech/voxinstruct/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 1"
+      },
+      {
+        "method_id": "ours_grpo_face_style",
+        "method_desc": "Our method: GRPO face-style TTS",
+        "speech_file": "speech/ours_grpo_face_style/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 2"
+      },
+      {
+        "method_id": "synthsees",
+        "method_desc": "FaceTTS baseline: SYNTHE-SEES",
+        "speech_file": "speech/synthsees/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 3"
+      },
+      {
+        "method_id": "parler_tts",
+        "method_desc": "StyleTTS baseline: ParlerTTS",
+        "speech_file": "speech/parler_tts/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 4"
+      },
+      {
+        "method_id": "promptttspp",
+        "method_desc": "StyleTTS baseline: PromptTTS/PromptTTS++",
+        "speech_file": "speech/promptttspp/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 5"
+      },
+      {
+        "method_id": "ablation_onlyface",
+        "method_desc": "Ablation: onlyface",
+        "speech_file": "speech/ablation_onlyface/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 6"
+      },
+      {
+        "method_id": "ablation_face_style",
+        "method_desc": "Ablation: face_style",
+        "speech_file": "speech/ablation_face_style/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 7"
+      },
+      {
+        "method_id": "ablation_face_style_0_5",
+        "method_desc": "Ablation: face_style_0_5",
+        "speech_file": "speech/ablation_face_style_0_5/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 8"
+      },
+      {
+        "method_id": "multimodaltts",
+        "method_desc": "Face-style TTS baseline: MultimodalTTS (ICME face_style)",
+        "speech_file": "speech/multimodaltts/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 9"
+      },
+      {
+        "method_id": "fvtts",
+        "method_desc": "FaceTTS baseline: FVTTS",
+        "speech_file": "speech/fvtts/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 10"
+      },
+      {
+        "method_id": "ablation_onlystyle",
+        "method_desc": "Ablation: onlystyle",
+        "speech_file": "speech/ablation_onlystyle/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 11"
+      },
+      {
+        "method_id": "gt",
+        "method_desc": "GT natural speech",
+        "speech_file": "speech/gt/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 12"
+      },
+      {
+        "method_id": "facetts",
+        "method_desc": "FaceTTS baseline: FaceTTS",
+        "speech_file": "speech/facetts/case_20_M_hard_2Ong6qegCkY_00_00_11_48.wav",
+        "label": "Audio 13"
+      }
+    ]
+  }
+];
+
+    const scoreOptions = {
+      naturalness: [
+        ['', ''],
+        ['1', '1 completely unnatural'],
+        ['2', '2 mostly unnatural'],
+        ['3', '3 equally natural / unnatural'],
+        ['4', '4 mostly natural'],
+        ['5', '5 completely natural']
+      ],
+      similarity: [
+        ['', ''],
+        ['1', '1 completely unlike'],
+        ['2', '2 mostly unlike'],
+        ['3', '3 equally same / unlike'],
+        ['4', '4 mostly same'],
+        ['5', '5 completely same']
+      ]
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    function optionHtml(kind) {
+      return scoreOptions[kind].map(([value, label]) => `<option value="${value}">${escapeHtml(label)}</option>`).join('');
+    }
+
+    function render() {
+      const holder = document.getElementById('cases');
+      holder.innerHTML = DATA.map((item, caseIndex) => `
+        <section class="case" id="${escapeHtml(item.mos_case_id)}">
+          <div class="case-head">
+            <div>
+              <img class="face" src="${escapeHtml(item.face_file)}" alt="Reference face for case ${caseIndex + 1}">
+              <p class="meta">Case ${caseIndex + 1} / ${DATA.length}</p>
+            </div>
+            <div>
+              <h2>${caseIndex + 1}. Reference</h2>
+              <p class="meta">Gender: ${escapeHtml(item.speechgender)} | Difficulty: ${escapeHtml(item.case_type)}</p>
+              <div class="prompt"><b>Style prompt:</b> ${escapeHtml(item.style_prompt)}</div>
+              <div class="prompt"><b>Text content:</b> ${escapeHtml(item.content_prompt)}</div>
+            </div>
+          </div>
+          <h3>To be evaluated</h3>
+          <div class="grid">
+            ${item.samples.map((sample) => `
+              <div class="sample" data-case="${escapeHtml(item.mos_case_id)}" data-method="${escapeHtml(sample.method_id)}">
+                <div class="sample-title">${escapeHtml(sample.label)}</div>
+                <audio controls preload="none" src="${escapeHtml(sample.speech_file)}"></audio>
+                <label>Naturalness</label>
+                <select class="score" data-kind="naturalness" name="${escapeHtml(item.mos_case_id)}__${escapeHtml(sample.method_id)}__naturalness">${optionHtml('naturalness')}</select>
+                <label>Similarity</label>
+                <select class="score" data-kind="similarity" name="${escapeHtml(item.mos_case_id)}__${escapeHtml(sample.method_id)}__similarity">${optionHtml('similarity')}</select>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `).join('');
+      document.querySelectorAll('.score').forEach((select) => select.addEventListener('change', updateProgress));
+      updateProgress();
+    }
+
+    function allSelects() {
+      return Array.from(document.querySelectorAll('select.score'));
+    }
+
+    function updateProgress() {
+      const selects = allSelects();
+      const done = selects.filter((select) => select.value).length;
+      document.getElementById('progress').textContent = `${done} / ${selects.length} scored`;
+    }
+
+    function findMissing() {
+      document.querySelectorAll('.missing').forEach((node) => node.classList.remove('missing'));
+      const missing = allSelects().filter((select) => !select.value);
+      if (!document.getElementById('contentCheck').value.trim()) {
+        document.getElementById('contentCheck').classList.add('missing');
+      }
+      missing.forEach((select) => select.classList.add('missing'));
+      const target = document.querySelector('.missing');
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return missing.length;
+    }
+
+    function csvCell(value) {
+      const text = String(value ?? '');
+      return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    function downloadCsv() {
+      const missing = findMissing();
+      const content = document.getElementById('contentCheck').value.trim();
+      if (missing || !content) {
+        alert('Please fill the listening check and all MOS scores before downloading.');
+        return;
+      }
+      const rows = [[
+        'content_check', 'mos_case_id', 'case_id', 'case_type', 'speechgender',
+        'display_label', 'method_id', 'method_desc', 'speech_file', 'naturalness', 'similarity'
+      ]];
+      DATA.forEach((item) => {
+        item.samples.forEach((sample) => {
+          const naturalness = document.querySelector(`[name="${item.mos_case_id}__${sample.method_id}__naturalness"]`).value;
+          const similarity = document.querySelector(`[name="${item.mos_case_id}__${sample.method_id}__similarity"]`).value;
+          rows.push([
+            content, item.mos_case_id, item.case_id, item.case_type, item.speechgender,
+            sample.label, sample.method_id, sample.method_desc, sample.speech_file, naturalness, similarity
+          ]);
+        });
+      });
+      const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mos_scores_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('checkBtn').addEventListener('click', () => {
+      const missing = findMissing();
+      if (!missing && document.getElementById('contentCheck').value.trim()) alert('All required fields are filled.');
+    });
+    document.getElementById('downloadBtn').addEventListener('click', downloadCsv);
+    render();
+  </script>
+</body>
+</html>

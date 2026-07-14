@@ -11,4 +11,4 @@ voxinstruct,StyleTTS baseline: VoxInstruct,generated,voxinstruct
 facetts,FaceTTS baseline: FaceTTS,ori,facetts
 synthsees,FaceTTS baseline: SYNTHE-SEES,ori,synthsees
 fvtts,FaceTTS baseline: FVTTS,ori,fvtts
-multimodaltts,Face-style TTS baseline: MultimodalTTS (same source as face_style),selected,face_style
+multimodaltts,Face-style TTS baseline: MultimodalTTS (ICME face_style),ori,face_style
