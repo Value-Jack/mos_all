@@ -1,0 +1,6 @@
+case_id: easy_0280_GdQkyQrQawM_00_06_28_07
+gender: F
+case_type: easy
+style_prompt: A female speaker delivers the line with a youthful, high-pitched voice and lively presence, while keeping the tone clear and neutral.
+content_prompt: The fourth exercise is that you're going to start in a clothing store and finish in a bowling alley.
+instruction: A female speaker delivers the line with a youthful, high-pitched voice and lively presence, while keeping the tone clear and neutral. “The fourth exercise is that you're going to start in a clothing store and finish in a bowling alley.”

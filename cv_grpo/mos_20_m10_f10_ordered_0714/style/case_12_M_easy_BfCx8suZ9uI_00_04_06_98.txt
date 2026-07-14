@@ -1,0 +1,6 @@
+case_id: easy_0103_BfCx8suZ9uI_00_04_06_98
+gender: M
+case_type: easy
+style_prompt: This male speaker has a low, grounded adult voice, speaking with brisk, energetic clarity while maintaining a neutral tone.
+content_prompt: And the more arbitrary decisions you make.
+instruction: This male speaker has a low, grounded adult voice, speaking with brisk, energetic clarity while maintaining a neutral tone. “And the more arbitrary decisions you make.”

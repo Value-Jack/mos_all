@@ -1,0 +1,6 @@
+case_id: easy_0049_UCsDlaKhufk_00_08_16_17
+gender: M
+case_type: easy
+style_prompt: The male speaker sounds vividly happy and upbeat, speaking with lively energy while keeping a natural, normal pitch.
+content_prompt: I hope you enjoyed this video and I would love to hear from you.
+instruction: The male speaker sounds vividly happy and upbeat, speaking with lively energy while keeping a natural, normal pitch. “I hope you enjoyed this video and I would love to hear from you.”

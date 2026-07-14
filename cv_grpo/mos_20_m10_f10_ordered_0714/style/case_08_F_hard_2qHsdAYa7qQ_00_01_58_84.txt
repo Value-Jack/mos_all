@@ -1,0 +1,6 @@
+case_id: hard_0038_2qHsdAYa7qQ_00_01_58_84
+gender: F
+case_type: hard
+style_prompt: The female speaker sounds like a happy adult, speaking with bright warmth, lively enthusiasm, and an unmistakably cheerful, expressive tone.
+content_prompt: might discover that pickled herring or sauerkraut is delicious to you you've discovered a new food.
+instruction: The female speaker sounds like a happy adult, speaking with bright warmth, lively enthusiasm, and an unmistakably cheerful, expressive tone. “might discover that pickled herring or sauerkraut is delicious to you you've discovered a new food.”

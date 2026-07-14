@@ -1,0 +1,6 @@
+case_id: easy_0256_qUwE8TRhOk8_00_10_30_99
+gender: F
+case_type: easy
+style_prompt: A female speaker delivers the line with bright, youthful joy, sounding lively, warm, and clearly delighted throughout.
+content_prompt: And let's get on it. I am Asia Dang. Thank you so much for watching this channel. If you have.
+instruction: A female speaker delivers the line with bright, youthful joy, sounding lively, warm, and clearly delighted throughout. “And let's get on it. I am Asia Dang. Thank you so much for watching this channel. If you have.”

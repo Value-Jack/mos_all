@@ -1,0 +1,6 @@
+case_id: hard_0219_4qkpjw5homQ_00_00_27_37
+gender: F
+case_type: hard
+style_prompt: A female speaker delivers the line with bright, exuberant joy and lively momentum, sounding warmly animated and unmistakably upbeat.
+content_prompt: In adults, the good news is that roundworms.
+instruction: A female speaker delivers the line with bright, exuberant joy and lively momentum, sounding warmly animated and unmistakably upbeat. “In adults, the good news is that roundworms.”

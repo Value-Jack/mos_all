@@ -1,0 +1,6 @@
+case_id: easy_0005_Cwgxm1TUfj8_00_07_28_75
+gender: M
+case_type: easy
+style_prompt: This male speaker sounds warmly upbeat and distinctly joyful, speaking with lively adult confidence and an easy, infectious smile in the voice.
+content_prompt: because that's where the joy is.
+instruction: This male speaker sounds warmly upbeat and distinctly joyful, speaking with lively adult confidence and an easy, infectious smile in the voice. “because that's where the joy is.”

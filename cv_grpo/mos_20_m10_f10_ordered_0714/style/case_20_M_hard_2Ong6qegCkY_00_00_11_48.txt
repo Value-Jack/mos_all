@@ -1,0 +1,6 @@
+case_id: hard_0196_2Ong6qegCkY_00_00_11_48
+gender: M
+case_type: hard
+style_prompt: With an old, low voice, the male speaker speaks at a steady pace, carrying clear and heartfelt sadness.
+content_prompt: broke into the darkness of our world.
+instruction: With an old, low voice, the male speaker speaks at a steady pace, carrying clear and heartfelt sadness. “broke into the darkness of our world.”

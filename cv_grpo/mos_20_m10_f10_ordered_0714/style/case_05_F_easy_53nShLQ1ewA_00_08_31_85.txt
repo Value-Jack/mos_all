@@ -1,0 +1,6 @@
+case_id: easy_0086_53nShLQ1ewA_00_08_31_85
+gender: F
+case_type: easy
+style_prompt: The female speaker sounds calm and neutral, speaking at a natural pace with an even, balanced voice.
+content_prompt: And every aspect of your life, we all have habits.
+instruction: The female speaker sounds calm and neutral, speaking at a natural pace with an even, balanced voice. “And every aspect of your life, we all have habits.”

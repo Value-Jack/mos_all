@@ -1,0 +1,6 @@
+case_id: easy_0193_lw_dUKXNCyw_00_05_27_47
+gender: M
+case_type: easy
+style_prompt: This male speaker has a young, low-toned voice, speaking at a steady pace with calm, neutral energy.
+content_prompt: it's really easy to make mistakes, to miss things. Oftentimes those things are really obvious to.
+instruction: This male speaker has a young, low-toned voice, speaking at a steady pace with calm, neutral energy. “it's really easy to make mistakes, to miss things. Oftentimes those things are really obvious to.”

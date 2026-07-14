@@ -1,0 +1,14 @@
+method_id,method_desc,source_type,source_key
+gt,GT natural speech,gt,wav_fp
+ours_grpo_face_style,Our method: GRPO face-style TTS,selected,grpo_face_style
+ablation_face_style,Ablation: face_style,selected,face_style
+ablation_face_style_0_5,Ablation: face_style_0_5,selected,face_style_0_5
+ablation_onlystyle,Ablation: onlystyle,selected,onlystyle
+ablation_onlyface,Ablation: onlyface,selected,onlyface
+promptttspp,StyleTTS baseline: PromptTTS/PromptTTS++,generated,promptttspp
+parler_tts,StyleTTS baseline: ParlerTTS,generated,parler_tts
+voxinstruct,StyleTTS baseline: VoxInstruct,generated,voxinstruct
+facetts,FaceTTS baseline: FaceTTS,ori,facetts
+synthsees,FaceTTS baseline: SYNTHE-SEES,ori,synthsees
+fvtts,FaceTTS baseline: FVTTS,ori,fvtts
+multimodaltts,Face-style TTS baseline: MultimodalTTS (same source as face_style),selected,face_style

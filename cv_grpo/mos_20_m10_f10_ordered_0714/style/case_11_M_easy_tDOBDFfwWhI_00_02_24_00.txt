@@ -1,0 +1,6 @@
+case_id: easy_0218_tDOBDFfwWhI_00_02_24_00
+gender: M
+case_type: easy
+style_prompt: The male speaker sounds like an adult with a low voice, delivering the line neutrally but with lively presence at a normal pace.
+content_prompt: within the relationship, when they've broken up with you, it can be such a demonstration.
+instruction: The male speaker sounds like an adult with a low voice, delivering the line neutrally but with lively presence at a normal pace. “within the relationship, when they've broken up with you, it can be such a demonstration.”

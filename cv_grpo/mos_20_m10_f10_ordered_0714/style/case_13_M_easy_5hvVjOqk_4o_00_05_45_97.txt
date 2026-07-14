@@ -1,0 +1,6 @@
+case_id: easy_0269_5hvVjOqk_4o_00_05_45_97
+gender: M
+case_type: easy
+style_prompt: The male speaker sounds energetic yet neutral, with a low adult voice and a steady, natural speaking pace.
+content_prompt: a lot more than just his tone it was all of those non-verbal cues all packaged into one kind of.
+instruction: The male speaker sounds energetic yet neutral, with a low adult voice and a steady, natural speaking pace. “a lot more than just his tone it was all of those non-verbal cues all packaged into one kind of.”

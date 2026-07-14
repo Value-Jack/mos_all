@@ -1,0 +1,6 @@
+case_id: hard_0082_H6lkLEaPT58_00_03_51_38
+gender: M
+case_type: hard
+style_prompt: With bright, unmistakable happiness, the male speaker delivers the line in a youthful low voice that feels warm and lively.
+content_prompt: This isn't just about becoming your best self, it's about being ready to receive the best that life has to offer you, including the love that you actually deserve.
+instruction: With bright, unmistakable happiness, the male speaker delivers the line in a youthful low voice that feels warm and lively. “This isn't just about becoming your best self, it's about being ready to receive the best that life has to offer you, including the love that you actually deserve.”

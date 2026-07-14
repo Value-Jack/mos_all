@@ -1,0 +1,6 @@
+case_id: hard_0036_2OWduVCiOZ4_00_00_39_25
+gender: F
+case_type: hard
+style_prompt: With bright, unmistakable happiness, the female speaker delivers the line in a lively adult voice with a naturally high pitch.
+content_prompt: believe me, the time pressure was intense. I think that helped make me more mindful of.
+instruction: With bright, unmistakable happiness, the female speaker delivers the line in a lively adult voice with a naturally high pitch. “believe me, the time pressure was intense. I think that helped make me more mindful of.”

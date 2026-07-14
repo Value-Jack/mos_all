@@ -1,0 +1,6 @@
+case_id: hard_0268_9OXlZUfbsPI_00_13_12_24
+gender: F
+case_type: hard
+style_prompt: A female speaker delivers the line with a bright, high voice and clearly joyful, lively warmth at a natural pace.
+content_prompt: Don't take offense. Gird up your loins and be more assertive.
+instruction: A female speaker delivers the line with a bright, high voice and clearly joyful, lively warmth at a natural pace. “Don't take offense. Gird up your loins and be more assertive.”

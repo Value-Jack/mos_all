@@ -1,0 +1,6 @@
+case_id: hard_0279_AViL1gDtfpU_00_08_22_19
+gender: F
+case_type: hard
+style_prompt: In a bright, high-pitched voice, the female speaker sounds openly joyful while speaking at a natural, steady pace.
+content_prompt: So then it was finally time to return back to work and that was incredibly hard.
+instruction: In a bright, high-pitched voice, the female speaker sounds openly joyful while speaking at a natural, steady pace. “So then it was finally time to return back to work and that was incredibly hard.”

@@ -1,0 +1,6 @@
+case_id: easy_0070_yWjTFS5KgIU_00_01_51_05
+gender: M
+case_type: easy
+style_prompt: With a low, youthful voice and bright, exuberant happiness, the male speaker delivers the line at a natural pace.
+content_prompt: Oh my goodness, and uh, I got.
+instruction: With a low, youthful voice and bright, exuberant happiness, the male speaker delivers the line at a natural pace. “Oh my goodness, and uh, I got.”

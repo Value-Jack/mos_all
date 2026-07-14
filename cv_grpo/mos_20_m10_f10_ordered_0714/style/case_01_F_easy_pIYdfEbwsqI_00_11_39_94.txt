@@ -1,0 +1,6 @@
+case_id: easy_0255_pIYdfEbwsqI_00_11_39_94
+gender: F
+case_type: easy
+style_prompt: With bright, unmistakable joy, the female speaker sounds young and lively, speaking at a normal pace with a high, energetic voice.
+content_prompt: and cute. So, would love to do. That is all my goals for 2025 and my little mini wrap-up of 2024.
+instruction: With bright, unmistakable joy, the female speaker sounds young and lively, speaking at a normal pace with a high, energetic voice. “and cute. So, would love to do. That is all my goals for 2025 and my little mini wrap-up of 2024.”

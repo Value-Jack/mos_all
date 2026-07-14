@@ -1,0 +1,6 @@
+case_id: easy_0015_2--6XzUxGBI_00_22_19_92
+gender: F
+case_type: easy
+style_prompt: With bright, youthful excitement, the female speaker sounds vividly happy and energetic, delivering the line with lively, upbeat warmth.
+content_prompt: to start writing me and Leanne and Kath are so excited to get working on those for you but yes.
+instruction: With bright, youthful excitement, the female speaker sounds vividly happy and energetic, delivering the line with lively, upbeat warmth. “to start writing me and Leanne and Kath are so excited to get working on those for you but yes.”
