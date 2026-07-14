@@ -2176,12 +2176,14 @@
       const params = new URLSearchParams(window.location.search);
       const assignmentId = params.get('assignmentId') || '';
       const turkSubmitTo = params.get('turkSubmitTo') || 'https://www.mturk.com';
+      const submitMode = params.get('submitMode') || 'externalSubmit';
       document.getElementById('assignmentId').value = assignmentId;
       document.getElementById('workerId').value = params.get('workerId') || '';
       document.getElementById('hitId').value = params.get('hitId') || '';
       document.getElementById('userAgent').value = navigator.userAgent;
+      document.getElementById('mturkForm').dataset.submitMode = submitMode;
       document.getElementById('mturkForm').action = turkSubmitTo.replace(/\/$/, '') + '/mturk/externalSubmit';
-      if (!assignmentId || assignmentId === 'ASSIGNMENT_ID_NOT_AVAILABLE') {
+      if (submitMode !== 'postMessage' && (!assignmentId || assignmentId === 'ASSIGNMENT_ID_NOT_AVAILABLE')) {
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('previewNotice').textContent = 'Preview mode: accept the HIT before submitting.';
       }
@@ -2251,6 +2253,15 @@
       if (findMissing()) {
         event.preventDefault();
         alert('Please fill the listening check and all MOS scores before submitting.');
+        return;
+      }
+      if (event.currentTarget.dataset.submitMode === 'postMessage') {
+        event.preventDefault();
+        const answers = {};
+        new FormData(event.currentTarget).forEach((value, key) => { answers[key] = value; });
+        window.parent.postMessage({ type: 'mos-submit', answers }, '*');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').textContent = 'Submitting...';
       }
     });
 
