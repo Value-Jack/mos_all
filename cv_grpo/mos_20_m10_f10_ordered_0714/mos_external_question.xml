@@ -1,0 +1,4 @@
+<ExternalQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd">
+  <ExternalURL>https://value-jack.github.io/mos_all/cv_grpo/mos_20_m10_f10_ordered_0714/mos_external.html?cases=${cases}</ExternalURL>
+  <FrameHeight>900</FrameHeight>
+</ExternalQuestion>
